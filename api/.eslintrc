@@ -1,0 +1,6 @@
+{
+  "extends": ["airbnb", "airbnb/hooks"],
+  "rules": {
+    "no-underscore-dangle": "off",
+  },
+}
