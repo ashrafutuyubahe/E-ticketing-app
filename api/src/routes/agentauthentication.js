@@ -1,60 +1,66 @@
-const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import express from 'express';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+
 const Router = express.Router();
-const SECRET_KEY = process.env.SECRET_KEY || "your_secret_key";
-const connection = require("../dbconnection");
-const mongoose = require("mongoose");
-const Agent = require("../models/agentModel");
+const SECRET_KEY = process.env.SECRET_KEY || 'your_secret_key';
 
-Router.post("/agentRegister", async (req, res) => {
+import Agent from '../models/agentModel';
+
+Router.post('/agentRegister', async (req, res) => {
   try {
-    const { agentEmail, agentPassword, agentAgency,agentWorkStation,agentName } = req.body;
+    const {
+      agentEmail,
+      agentPassword,
+      agentAgency,
+      agentWorkStation,
+      agentName,
+    } = req.body;
 
-    const existingAgent= await Agent.findOne({agentEmail  });
+    const existingAgent = await Agent.findOne({ agentEmail });
 
     if (existingAgent) {
       return res.status(400).json({
-        error: "agent already exists. please Register with other credentials",
+        error: 'agent already exists. please Register with other credentials',
       });
     }
 
     const hashedPassword = await bcrypt.hash(agentPassword, 10);
 
     const newAgent = new Agent({
-       agentEmail,
-       agentPassword: hashedPassword,
+      agentEmail,
+      agentPassword: hashedPassword,
       agentAgency,
       agentWorkStation,
-      agentName
+      agentName,
     });
 
     const saveAgent = await newAgent.save();
 
     if (saveAgent) {
-      return res.status(201).json({ message: "Agent added successfully" });
+      return res.status(201).json({ message: 'Agent added successfully' });
     }
-    return res.status(404).json({ message: "Agent registration failed" });
+    return res.status(404).json({ message: 'Agent registration failed' });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-Router.post("/agentLogin", async (req, res) => {
+Router.post('/agentLogin', async (req, res) => {
   try {
     const { agentEmail, agentPassword, agentAgency } = req.body;
 
     if (!agentEmail || !agentPassword || !agentAgency) {
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ error: 'All fields are required' });
     }
 
-    const AgentInstance = await Agent.findOne({agentEmail});
+    const AgentInstance = await Agent.findOne({ agentEmail });
 
     if (!AgentInstance) {
       return res
         .status(400)
-        .json({ error: "Invalid Email, Agency, or Password" });
+        .json({ error: 'Invalid Email, Agency, or Password' });
     }
 
     const validPassword = await bcrypt.compare(
@@ -64,98 +70,91 @@ Router.post("/agentLogin", async (req, res) => {
     if (!validPassword) {
       return res
         .status(400)
-        .json({ error: "Invalid Email,agency, or Password" });
+        .json({ error: 'Invalid Email,agency, or Password' });
     }
 
     const token = jwt.sign({ agentId: AgentInstance._id }, SECRET_KEY, {
-      expiresIn: "1h",
+      expiresIn: '1h',
     });
 
     res
-      .header("Authorization", "Bearer " + token)
-      .json({ message: "Logged in successfully" });
+      .header('Authorization', 'Bearer ' + token)
+      .json({ message: 'Logged in successfully' });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-
-Router.get("/agents", async (req, res) => {
+Router.get('/agents', async (req, res) => {
   try {
     const agents = await Agent.find({});
-       if(!agents){
-                return res.status(401).send("failed to fetch agents");
-       }
-    res.status(200).json({agents});
+    if (!agents) {
+      return res.status(401).send('failed to fetch agents');
+    }
+    res.status(200).json({ agents });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
-
 
 Router.get('/agents/:id', async (req, res) => {
   try {
     const { id } = req.params;
-   
+
     const agent = await Agent.findById(id).select('+agentPassword');
-    
+
     if (!agent) {
-      return res.status(404).send("Agent not found");
+      return res.status(404).send('Agent not found');
     }
-    
+
     res.status(200).json({ agent });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-
-Router.put("/UpdateAgent/:id", async (req, res) => {
+Router.put('/UpdateAgent/:id', async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
 
   try {
-    
     const updatedAgent = await Agent.findByIdAndUpdate(
       id,
-      { $set: updates }, 
-      { new: true } 
+      { $set: updates },
+      { new: true }
     );
 
     if (updatedAgent) {
-      res.status(200).json({ message: "Agent updated successfully", updatedAgent });
+      res
+        .status(200)
+        .json({ message: 'Agent updated successfully', updatedAgent });
     } else {
-      res.status(404).json({ error: "Agent not found" });
+      res.status(404).json({ error: 'Agent not found' });
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-
-
-
-Router.delete("/deleteAgent/:id", async (req, res) => {
-const { id } = req.params;
+Router.delete('/deleteAgent/:id', async (req, res) => {
+  const { id } = req.params;
 
   try {
     const result = await Agent.findByIdAndDelete(id);
 
     if (result) {
-      res.status(200).json({ message: "Agent deleted successfully" });
+      res.status(200).json({ message: 'Agent deleted successfully' });
     } else {
-      res.status(404).json({ error: "Agent not found" });
+      res.status(404).json({ error: 'Agent not found' });
     }
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-module.exports = Router;
+export default Router;

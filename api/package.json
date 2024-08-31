@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/app.js",
   "scripts": {
-    "dev": "nodemon --exec babel-node --presets=@babel/preset-env  -- ./src/app.js",
+    "dev": "cross-env DEBUG=app:* nodemon --exec babel-node --presets=@babel/preset-env  -- ./src/app.js",
     "lint": "eslint --fix",
     "format": "prettier --write",
     "babel-node": "babel-node --presets='@babel/preset-env'",
@@ -49,6 +49,7 @@
     "@babel/node": "^7.25.0",
     "@babel/preset-env": "^7.25.4",
     "@eslint/js": "^9.9.1",
+    "cross-env": "^7.0.3",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-prettier": "^9.1.0",
